@@ -49,5 +49,12 @@ module.exports = ({ express, app, io }) => {
 		res.render('error')
 	})
 
+	io.on('connection', socket => {
+		console.log('Socket Connect:', { id: socket.id })
+		socket.on('disconnect', message => {
+			console.log({ id: socket.id, message })
+		})
+	})
+
 	return app
 }
