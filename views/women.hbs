@@ -1,0 +1,87 @@
+<link rel="stylesheet/less" type="text/less" href="less/u-box.less" />
+<style rel="stylesheet/less" type="text/less">
+    body {
+        margin: 0;
+        padding: 0;
+    }
+    .app-tpl {
+        height: ~"calc(100vh)";
+        overflow-y: auto;
+        overflow-x: hidden;
+        background-color: rgb(248, 239, 201);
+    }
+
+    .messages {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+
+        li {
+            &:nth-child(odd) {
+                background-color: yellow;
+            }
+        }
+    }
+</style>
+<script src="//cdnjs.cloudflare.com/ajax/libs/less.js/2.7.1/less.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.11/vue.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script type="text/html" id="app-tpl">
+<div class="app-tpl u-box u-box--column">
+    <h1>{{title}}</h1>
+	<main class="u-flex u-box u-box--column">
+        <ul class="u-flex messages">
+            <li>Welcome</li>
+            <li v-for="msg in messages"><strong v-text="msg.id" />: \{{msg.message}}</li>
+        </ul>
+    </main>
+    <footer>
+        <form class="u-box" @submit="onSubmit">
+            <input class="u-flex" v-model="formData.message" type="text" placeholder="Message" />
+            <button type="submit">Send</button>
+        </form>
+    </footer>
+
+</div>
+</script>
+<script>
+    var socket = io(),
+        el = document.currentScript
+
+    const storeMessages = {
+        state: Vue.observable({
+            messages: []
+        }),
+        methods: {
+            onMessage(message) {
+                this.state.messages.push(message)
+            }
+        }
+    }
+    const App = new Vue({
+        template: '#app-tpl',
+        data: () => ({
+            formData: {
+                message: ''
+            }
+        }),
+        computed: {
+            messages() {
+                return storeMessages.state.messages || []
+            }
+        },
+        methods: {
+            onSubmit(event) {
+                event.preventDefault()
+                const { formData } = this
+                socket.emit('women-message', formData.message)
+                console.log('message:', formData.message)
+                formData.message = ''
+            }
+        }
+    })
+
+    App.$mount(el)
+
+    socket.on('women-message', storeMessages.methods.onMessage.bind(storeMessages))
+</script>
